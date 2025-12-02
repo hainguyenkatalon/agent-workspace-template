@@ -103,9 +103,13 @@ This template intentionally does **not** include a loop tool, because long auton
 
 If your team wants longer multi-iteration runs:
 
-- Create and maintain an **opt‑in** loop script outside this template (e.g. in your team’s tooling repo).
-- Make `MODEL` and `reasoning_effort` required configuration (no hard-coded expensive default).
-- Start with a low iteration count (1–3) and monitor token usage/cost closely before increasing it.
+- Use the sample `codex_loop.py` script in the root of this repo as a reference. It shows one way to:
+  - Detect the current branch.
+  - Log each iteration under `specs/<branch>/logs/`.
+  - Call Codex with a fixed prompt (“Continue working on this branch.”) multiple times.
+- Copy and adapt that script into your own workspace or tooling repo, making sure:
+  - `MODEL` and `REASONING_EFFORT` are required configuration (no hard-coded expensive default).
+  - You start with a low iteration count (1–3) and monitor token usage/cost closely before increasing it.
 
 ## 6. Daily Workflow for Humans
 
