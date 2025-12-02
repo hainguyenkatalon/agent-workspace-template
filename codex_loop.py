@@ -11,10 +11,9 @@ the root of `agent-workspace-template` so that humans can:
 
 High-level behavior
 -------------------
-- Detect the current Git branch.
-- Log each iteration under `specs/<branch>/logs/`.
-- On each iteration, call Codex with the prompt:
+- For a fixed number of iterations, call Codex with the prompt:
     "Continue working on this branch."
+  and let it write output to the terminal.
 
 Configuration (REQUIRED before use)
 -----------------------------------
@@ -44,20 +43,10 @@ of tokens per iteration. To stay safe:
 - Monitor your usage/cost dashboards and only scale up once you’re confident
   in the flow.
 
-Where to use this script
-------------------------
-- Do **not** run it in the `agent-workspace-template` repo itself.
-- Instead, copy it into:
-  - A workspace repo created from `template/`, or
-  - A separate tooling/working-style repo that you control.
-- Run it from the root of that repo so that:
-  - Git branch detection works, and
-  - Logs are written under `specs/<branch>/logs/` in that repo.
-
 Usage example (after copying & editing MODEL / REASONING_EFFORT):
 
     python codex_loop.py           # uses default iterations=5
-    python codex_loop.py  # then edit code if you want a different default
+    # edit the script if you want a different default
 
 You can tune the number of iterations by changing the default argument of
 `loop(iterations: int = 5)` at the bottom of this file.
@@ -66,87 +55,6 @@ You can tune the number of iterations by changing the default argument of
 import subprocess
 import sys
 import textwrap
-from pathlib import Path
-from datetime import datetime
-
-
-def run(cmd, input_text=None):
-    return subprocess.run(cmd, input=input_text, text=True, capture_output=True)
-
-
-def git_branch():
-    """Return the current git branch name.
-
-    Handles non-worktree clones, detached HEAD, and common CI envs.
-    Fallbacks (in order):
-    - `git rev-parse --abbrev-ref HEAD`
-    - `git branch --show-current`
-    - `git symbolic-ref --quiet --short HEAD`
-    - CI env vars (GITHUB_REF_NAME, GITHUB_HEAD_REF, CI_COMMIT_REF_NAME, BRANCH_NAME,
-      BUILDKITE_BRANCH, CIRCLE_BRANCH, GIT_BRANCH)
-    - Local branch pointing at HEAD (if unique)
-    - `detached-<shortsha>`
-    """
-
-    # 1) Standard branch lookup
-    r = run(["git", "rev-parse", "--abbrev-ref", "HEAD"])
-    b = (r.stdout or "").strip()
-    if r.returncode == 0 and b and b != "HEAD":
-        return b
-
-    # 2) Modern Git helper
-    r = run(["git", "branch", "--show-current"])
-    b = (r.stdout or "").strip()
-    if r.returncode == 0 and b:
-        return b
-
-    # 3) Symbolic ref (quiet)
-    r = run(["git", "symbolic-ref", "--quiet", "--short", "HEAD"])
-    b = (r.stdout or "").strip()
-    if r.returncode == 0 and b:
-        return b
-
-    # 4) CI environment fallbacks
-    import os
-    for key in (
-        "GITHUB_REF_NAME",  # branch or tag name
-        "GITHUB_HEAD_REF",  # PR source branch
-        "CI_COMMIT_REF_NAME",  # GitLab
-        "BRANCH_NAME",  # Jenkins
-        "BUILDKITE_BRANCH",
-        "CIRCLE_BRANCH",
-        "GIT_BRANCH",
-    ):
-        val = os.environ.get(key, "").strip()
-        if val:
-            return val
-
-    # 5) Try to find a local branch that points at HEAD (unique)
-    r = run([
-        "git",
-        "for-each-ref",
-        "--format=%(refname:short)",
-        "--points-at",
-        "HEAD",
-        "refs/heads",
-    ])
-    candidates = [ln.strip() for ln in (r.stdout or "").splitlines() if ln.strip()]
-    if r.returncode == 0 and len(candidates) == 1:
-        return candidates[0]
-
-    # 6) As a last resort, create a deterministic name for detached state
-    r = run(["git", "rev-parse", "--short", "HEAD"])
-    short = (r.stdout or "").strip() or "unknown"
-    fallback = f"detached-{short}"
-    print(
-        f"[codex_tools] Branch not detected (detached or non-worktree). Using '{fallback}'.",
-        file=sys.stderr,
-    )
-    return fallback
-
-
-def spec_dir_for_branch(branch: str) -> Path:
-    return Path("specs") / branch
 
 
 PROMPT = textwrap.dedent(
@@ -165,7 +73,6 @@ REASONING_EFFORT = ""
 
 def codex_exec(
     prompt: str,
-    log_file: Path,
 ):
     cmd = [
         "codex",
@@ -180,20 +87,9 @@ def codex_exec(
         f"reasoning_effort={REASONING_EFFORT}",
         prompt
     ]
-    with open(log_file, "a") as out:
-        p = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=out, stderr=out, text=True)
-        p.wait()
-        return p.returncode
-
-
-def git_changes_pending() -> bool:
-    r = run(["git", "status", "--porcelain"])
-    return bool((r.stdout or "").strip())
-
-
-def git_commit(msg: str):
-    run(["git", "add", "-A"])
-    run(["git", "commit", "-m", msg])
+    p = subprocess.Popen(cmd, text=True)
+    p.wait()
+    return p.returncode
 
 
 def loop(iterations: int = 5):
@@ -201,24 +97,12 @@ def loop(iterations: int = 5):
         print("[codex_tools] Please set MODEL and REASONING_EFFORT constants before running.", file=sys.stderr)
         sys.exit(1)
 
-    branch = git_branch()
-    spec = spec_dir_for_branch(branch)
-    spec.mkdir(parents=True, exist_ok=True)
-    log_dir = spec / "logs"
-    log_dir.mkdir(parents=True, exist_ok=True)
-    ts = datetime.now().strftime("%Y%m%d-%H%M%S")
-    log_file = log_dir / f"loop-{ts}.log"
     for i in range(1, iterations + 1):
-        if (spec / "STUCK.md").exists():
-            with open(log_file, "a") as f:
-                f.write("[codex_tools] STUCK.md present — stop.\n")
+        print(f"[codex_loop] iteration {i}/{iterations}", file=sys.stderr, flush=True)
+        rc = codex_exec(PROMPT)
+        if rc != 0:
+            print(f"[codex_loop] codex exited with code {rc}, stopping.", file=sys.stderr)
             break
-        with open(log_file, "a") as f:
-            f.write(f"[codex_tools] iteration {i}/{iterations}\n")
-        codex_exec(PROMPT, log_file)
-        # if git_changes_pending():
-        #     git_commit(f"chore(loop): iteration {i}/{iterations} updates (auto)")
-    print(f"[codex_tools] log: {log_file}")
 
 
 def main():

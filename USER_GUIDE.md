@@ -6,7 +6,7 @@ This page explains how to use the `agent-workspace-template` repo as the foundat
 > You do **not** work inside `agent-workspace-template` itself.  
 > You copy its `template/` folder to create **workspace repos**, and Codex works inside those workspaces (and the code repos listed in `REPOS.md`).
 
-## 1. Concepts
+## Concepts
 
 - **Workspace repo** (copy of `template/`)
   - Created per feature/initiative (e.g. `hello-world-workspace`).
@@ -21,7 +21,7 @@ This page explains how to use the `agent-workspace-template` repo as the foundat
   - Repeatedly calls `codex exec` from the workspace root with the same branch checked out.
   - Lets Codex make incremental progress, update docs, and coordinate with you.
 
-## 2. Creating a Workspace Repo
+## Creating a Workspace Repo
 
 From the parent directory that contains `agent-workspace-template`:
 
@@ -46,7 +46,7 @@ At this point, you have a **workspace repo** with these key files:
 
 Add the workspace folder plus each repo from `REPOS.md` to a VS Code workspace so you (and Codex) can navigate everything in one place while keeping responsibilities clearly separated.
 
-## 3. Filling in the Workspace Docs
+## Filling in the Workspace Docs
 
 From the new workspace root:
 
@@ -74,7 +74,7 @@ From the new workspace root:
      git commit -m "chore: bootstrap Codex workspace"
      ```
 
-## 4. What Codex Does in a Workspace
+## What Codex Does in a Workspace
 
 Codex uses the workspace docs as its “control room”:
 
@@ -97,21 +97,20 @@ Codex uses the workspace docs as its “control room”:
 6. Update workspace docs (`SPEC_PROGRESS`, `TECHNICAL_NOTES`, `USER_GUIDE`, `TO_HUMAN`).
 7. Commit changes (scoped to that slice) and prepare for the next iteration.
 
-## 5. Running Codex in a Loop
+## Running Codex in a Loop
 
 This template intentionally does **not** include a loop tool, because long autonomous runs can consume tokens very quickly.
 
 If your team wants longer multi-iteration runs:
 
 - Use the sample `codex_loop.py` script in the root of this repo as a reference. It shows one way to:
-  - Detect the current branch.
-  - Log each iteration under `specs/<branch>/logs/`.
   - Call Codex with a fixed prompt (“Continue working on this branch.”) multiple times.
+  - Require explicit configuration of `MODEL` and `REASONING_EFFORT` before running.
 - Copy and adapt that script into your own workspace or tooling repo, making sure:
   - `MODEL` and `REASONING_EFFORT` are required configuration (no hard-coded expensive default).
   - You start with a low iteration count (1–3) and monitor token usage/cost closely before increasing it.
 
-## 6. Daily Workflow for Humans
+## Daily Workflow for Humans
 
 When working with Codex via this system:
 
@@ -136,7 +135,7 @@ When working with Codex via this system:
   - Resolve the underlying issue (missing data, unclear requirements, conflicting constraints).
   - Once unblocked, remove or update `STUCK.md` and `TO_HUMAN.md`, then resume loops.
 
-## 7. Advantages
+## Advantages
 
 - **Clean main repos** – all agent notes, specs, progress logs, and questions live in the workspace repo, so your main code repos stay focused on code (files, PRs, commits aren’t polluted by agent-only docs).
 - **Multi-repo support** – a single workspace can coordinate changes across multiple codebases listed in `REPOS.md`, while still keeping clear boundaries about where Codex may edit.
