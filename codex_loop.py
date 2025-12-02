@@ -22,11 +22,9 @@ Edit the constants below before running:
     MODEL = ""            # REQUIRED
     REASONING_EFFORT = "" # REQUIRED
 
-Examples (non-exhaustive):
+Examples:
 - MODEL:
-    gpt-5.1-codex-max, gpt-5, gpt-4.1, gpt-4.1-mini,
-    o4-mini, o3-mini, o1 (logprob),
-    claude-3-5-sonnet-20241022, gemini-1.5-pro, deepseek-chat
+    gpt-5.1, gpt-5.1-codex, gpt-5.1-codex-max
 - REASONING_EFFORT:
     "low", "medium", "high", or "auto"
 
@@ -65,7 +63,7 @@ PROMPT = textwrap.dedent(
 
 # REQUIRED: choose deliberately before running.
 # Examples:
-# MODEL options: gpt-5, gpt-4.1, gpt-4.1-mini, o4-mini, o3-mini, o1 (logprob), claude-3-5-sonnet-20241022, gemini-1.5-pro, deepseek-chat
+# MODEL options: gpt-5.1, gpt-5.1-codex, gpt-5.1-codex-max
 # REASONING_EFFORT options: low, medium, high, auto
 MODEL = ""
 REASONING_EFFORT = ""
