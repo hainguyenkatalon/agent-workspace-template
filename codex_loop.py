@@ -12,7 +12,7 @@ the root of `agent-workspace-template` so that humans can:
 High-level behavior
 -------------------
 - For a fixed number of iterations, call Codex with the prompt:
-    "Continue working on this branch."
+    "Continue working on this workspace."
   and let it write output to the terminal.
 
 Configuration (REQUIRED before use)
@@ -57,7 +57,7 @@ import textwrap
 
 PROMPT = textwrap.dedent(
     """
-    Continue working on this branch.
+    Continue working on this workspace.
     """
 ).strip()
 

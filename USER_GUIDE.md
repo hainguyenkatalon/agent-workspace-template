@@ -104,7 +104,7 @@ This template intentionally does **not** include a loop tool, because long auton
 If your team wants longer multi-iteration runs:
 
 - Use the sample `codex_loop.py` script in the root of this repo as a reference. It shows one way to:
-  - Call Codex with a fixed prompt (“Continue working on this branch.”) multiple times.
+  - Call Codex with a fixed prompt (“Continue working on this workspace.”) multiple times.
   - Require explicit configuration of `MODEL` and `REASONING_EFFORT` before running.
 - Copy and adapt that script into your own workspace or tooling repo, making sure:
   - `MODEL` and `REASONING_EFFORT` are required configuration (no hard-coded expensive default).
