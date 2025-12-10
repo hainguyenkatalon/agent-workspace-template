@@ -140,5 +140,3 @@ When working with Codex via this system:
 - **Clean main repos** – all agent notes, specs, progress logs, and questions live in the workspace repo, so your main code repos stay focused on code (files, PRs, commits aren’t polluted by agent-only docs).
 - **Multi-repo support** – a single workspace can coordinate changes across multiple codebases listed in `REPOS.md`, while still keeping clear boundaries about where Codex may edit.
 - **Consistent collaboration model** – every workspace uses the same set of docs and flows, so humans and Codex share a predictable way to plan work, track progress, and resolve questions.
-
-You can paste this page into Confluence (using a Markdown macro or converter) and adapt path examples (e.g. repo names, default models) to match your organization.
